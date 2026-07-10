@@ -60,6 +60,116 @@
   .sign-grid .field label { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:0.08em; color:#888; margin-bottom:5px; font-weight:600; }
   .sign-grid .field input { width:100%; border:none; border-bottom:1.5px solid #1a4f8a; padding:6px 2px; font-size:.95rem; background:transparent; outline:none; }
 
+  /* Signature pad box (replaces the plain text input) */
+  .sig-box {
+    width:100%;
+    height:64px;
+    border:none;
+    border-bottom:1.5px solid #1a4f8a;
+    background:#fafdf6;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#9aa39a;
+    font-size:.85rem;
+    font-style:italic;
+    position:relative;
+    overflow:hidden;
+    transition:background .15s;
+  }
+  .sig-box:hover { background:#f0f7ec; }
+  .sig-box.has-signature {
+    color:transparent;
+    background:#fff;
+  }
+  .sig-box img {
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .sig-box .sig-clear-btn {
+    position:absolute;
+    top:2px;
+    right:4px;
+    background:rgba(255,255,255,0.85);
+    border:1px solid #ccc;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    font-size:11px;
+    line-height:1;
+    color:#666;
+    cursor:pointer;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .sig-box.has-signature .sig-clear-btn { display:flex; }
+  .sig-box .sig-clear-btn:hover { background:#fff; color:#a33; border-color:#a33; }
+
+  /* Signature drawing modal */
+  .sig-modal-backdrop {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(20,30,20,0.55);
+    z-index:10001;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .sig-modal-backdrop.show { display:flex; }
+  .sig-modal-card {
+    background:#fff;
+    border-radius:10px;
+    max-width:560px;
+    width:100%;
+    padding:22px 24px;
+    box-shadow:0 18px 50px rgba(0,0,0,0.25);
+  }
+  .sig-modal-card h3 { margin:0 0 6px 0; font-size:1.1rem; color:var(--odc-green); }
+  .sig-modal-card p { color:#666; font-size:.85rem; margin:0 0 12px 0; }
+  .sig-canvas-wrap {
+    border:2px dashed #c5d3bc;
+    border-radius:8px;
+    background:#fafdf6;
+    overflow:hidden;
+    position:relative;
+    touch-action:none;
+  }
+  .sig-canvas-wrap canvas {
+    display:block;
+    width:100%;
+    height:200px;
+    cursor:crosshair;
+    touch-action:none;
+  }
+  .sig-canvas-baseline {
+    position:absolute;
+    left:8%;
+    right:8%;
+    bottom:36px;
+    border-bottom:1px dashed #aab;
+    pointer-events:none;
+    color:#aab;
+    font-size:.7rem;
+    text-align:center;
+  }
+  .sig-modal-actions {
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid #eee;
+  }
+  .sig-modal-actions .left { display:flex; gap:6px; }
+  .sig-modal-actions .right { display:flex; gap:6px; }
+
   /* Print modal */
   .print-modal-backdrop { display:none; position:fixed; inset:0; background:rgba(20,30,20,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(2px); }
   .print-modal-backdrop.show { display:flex; }
@@ -77,7 +187,7 @@
   @media print {
     @page { size: A4; margin: 14mm 12mm; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .no-print, .app-header, .top-actions, .print-modal-backdrop { display:none !important; }
+    .no-print, .app-header, .top-actions, .print-modal-backdrop, .sig-modal-backdrop { display:none !important; }
     body { background:#fff; font-size:10.5pt; line-height:1.45; color:#000; }
     .doc-card { box-shadow:none; border:none; margin:0; padding:0; max-width:100%; border-radius:0; }
     .doc-body { padding:0; }
@@ -93,6 +203,11 @@
     .doc-cover-logo img { height:42pt !important; }
     .doc-cover-title { font-size:16pt !important; margin-top:8pt !important; }
     .doc-cover-version { font-size:8pt !important; color:#666 !important; }
+    /* Signature print: show only the image, hide hint text and clear button */
+    .sig-box { background:transparent !important; border:none !important; border-bottom:1px solid #1a4f8a !important; height:54px !important; }
+    .sig-box:not(.has-signature) { color:transparent !important; }
+    .sig-box .sig-clear-btn { display:none !important; }
+    .sig-box img { max-height:50px !important; }
   }
 </style>
 </head>
@@ -102,7 +217,7 @@
   <img src="logo_300.png" alt="One Dream Community" style="height:42px;width:auto;display:block;">
   <div>
     <h1>One Dream Community</h1>
-    <small>Home Safety Checklist · Document 5 · v1.0 2026</small>
+    <small>Home Safety Checklist · Document 5 · v1.1 2026</small>
   </div>
 </header>
 
@@ -120,16 +235,16 @@
       </div>
       <div class="doc-cover-title">Home Safety Checklist</div>
       <div class="doc-cover-subtitle">One Dream Community Care Service</div>
-      <div class="doc-cover-version">Document 5 · v1.0 · 2026</div>
+      <div class="doc-cover-version">Document 5 · v1.1 · 2026</div>
     </div>
 
     <!-- Date / Prepared by -->
     <table class="header-table">
       <tr>
         <td class="lbl">Date</td>
-        <td><input type="date"></td>
+        <td><input type="date" data-shared="p_docDate"></td>
         <td class="lbl">Prepared by</td>
-        <td><input type="text" placeholder="Staff name"></td>
+        <td><input type="text" data-shared="p_officer" placeholder="Staff name"></td>
       </tr>
     </table>
 
@@ -137,12 +252,16 @@
     <div class="doc-section-h">Participant Information</div>
     <table class="header-table">
       <tr>
-        <td class="lbl">Title</td><td><input type="text" placeholder="Mr / Mrs / Ms / Dr"></td>
-        <td class="lbl">First Name(s)</td><td><input type="text"></td>
+        <td class="lbl">Title</td><td><input type="text" data-shared="p_title" placeholder="Mr / Mrs / Ms / Dr"></td>
+        <td class="lbl">First Name(s)</td><td><input type="text" data-shared="p_firstName"></td>
       </tr>
       <tr>
-        <td class="lbl">Surname</td><td><input type="text"></td>
-        <td class="lbl">Date of Birth</td><td><input type="date"></td>
+        <td class="lbl">Surname</td><td><input type="text" data-shared="p_surname"></td>
+        <td class="lbl">Date of Birth</td><td><input type="date" data-shared="p_dob"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Address</td>
+        <td colspan="3"><input type="text" data-shared="p_address" placeholder="Street, Suburb, State, Postcode"></td>
       </tr>
       <tr>
         <td class="lbl">Gender</td>
@@ -240,10 +359,38 @@
     <!-- Sign block -->
     <div class="sign-grid">
       <div class="field"><label>Name</label><input type="text" placeholder="Assessor name"></div>
-      <div class="field"><label>Signature</label><input type="text" placeholder="Sign here"></div>
+      <div class="field">
+        <label>Signature</label>
+        <div class="sig-box" id="sigBox" onclick="openSigModal()" title="Click to draw your signature">
+          <span class="sig-placeholder">✍️ Click to sign here</span>
+          <img id="sigImg" style="display:none;" alt="Signature">
+          <button type="button" class="sig-clear-btn no-print" onclick="event.stopPropagation();clearSignature();" title="Clear signature">✕</button>
+        </div>
+        <input type="hidden" id="sigData" value="">
+      </div>
       <div class="field"><label>Date</label><input type="date"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- Signature Drawing Modal -->
+<div class="sig-modal-backdrop no-print" id="sigModalBackdrop" onclick="if(event.target===this)closeSigModal()">
+  <div class="sig-modal-card" role="dialog" aria-modal="true">
+    <h3>✍️ Draw Your Signature</h3>
+    <p>Use your mouse, trackpad, or finger to sign in the box below.</p>
+    <div class="sig-canvas-wrap">
+      <canvas id="sigCanvas" width="800" height="200"></canvas>
+    </div>
+    <div class="sig-modal-actions">
+      <div class="left">
+        <button class="btn btn-odc-outline btn-sm" onclick="clearCanvas()">🗑️ Clear</button>
+      </div>
+      <div class="right">
+        <button class="btn btn-odc-outline btn-sm" onclick="closeSigModal()">Cancel</button>
+        <button class="btn btn-odc btn-sm" onclick="saveSignature()">✓ Save Signature</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -333,6 +480,429 @@ function closePrintModal(){ document.getElementById('printModalBackdrop').classL
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('printModalBackdrop').classList.contains('show')) closePrintModal();
 });
+
+// ── Signature pad ─────────────────────────────────────────────
+(function(){
+  let canvas, ctx, drawing = false, hasDrawn = false;
+  let lastX = 0, lastY = 0;
+
+  function getCanvas() {
+    if (!canvas) {
+      canvas = document.getElementById('sigCanvas');
+      ctx = canvas.getContext('2d');
+    }
+    return canvas;
+  }
+
+  function setupCanvas() {
+    const c = getCanvas();
+    // Match canvas pixel size to displayed size for crisp lines on hi-DPI
+    const rect = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    c.width = rect.width * dpr;
+    c.height = rect.height * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1a3a6a';
+    // Clear with white background so the saved PNG is readable on print
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, rect.width, rect.height);
+    hasDrawn = false;
+  }
+
+  function getPos(e) {
+    const c = getCanvas();
+    const rect = c.getBoundingClientRect();
+    const point = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    return {
+      x: point.clientX - rect.left,
+      y: point.clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    // Draw a dot for taps that don't move
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a3a6a';
+    ctx.fill();
+    hasDrawn = true;
+  }
+  function moveDraw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+    hasDrawn = true;
+  }
+  function endDraw(e) {
+    if (!drawing) return;
+    e && e.preventDefault();
+    drawing = false;
+  }
+
+  function bindCanvasOnce() {
+    const c = getCanvas();
+    if (c.dataset.bound) return;
+    c.dataset.bound = '1';
+    c.addEventListener('mousedown', startDraw);
+    c.addEventListener('mousemove', moveDraw);
+    window.addEventListener('mouseup', endDraw);
+    c.addEventListener('mouseleave', endDraw);
+    c.addEventListener('touchstart', startDraw, {passive:false});
+    c.addEventListener('touchmove', moveDraw, {passive:false});
+    c.addEventListener('touchend', endDraw, {passive:false});
+    c.addEventListener('touchcancel', endDraw, {passive:false});
+  }
+
+  window.openSigModal = function() {
+    const backdrop = document.getElementById('sigModalBackdrop');
+    backdrop.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    // Wait for layout, then size the canvas
+    setTimeout(function(){
+      setupCanvas();
+      bindCanvasOnce();
+      // If there's an existing signature, load it onto the canvas for editing
+      const existing = document.getElementById('sigData').value;
+      if (existing) {
+        const img = new Image();
+        img.onload = function(){
+          const rect = getCanvas().getBoundingClientRect();
+          ctx.drawImage(img, 0, 0, rect.width, rect.height);
+          hasDrawn = true;
+        };
+        img.src = existing;
+      }
+    }, 30);
+  };
+
+  window.closeSigModal = function() {
+    document.getElementById('sigModalBackdrop').classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
+  window.clearCanvas = function() {
+    setupCanvas();
+  };
+
+  window.saveSignature = function() {
+    if (!hasDrawn) {
+      alert('Please draw your signature first.');
+      return;
+    }
+    const dataUrl = getCanvas().toDataURL('image/png');
+    document.getElementById('sigData').value = dataUrl;
+    renderSignaturePreview(dataUrl);
+    closeSigModal();
+  };
+
+  window.clearSignature = function() {
+    document.getElementById('sigData').value = '';
+    renderSignaturePreview('');
+  };
+
+  function renderSignaturePreview(dataUrl) {
+    const box = document.getElementById('sigBox');
+    const img = document.getElementById('sigImg');
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.style.display = 'block';
+      box.classList.add('has-signature');
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      box.classList.remove('has-signature');
+    }
+  }
+
+  // ESC closes signature modal
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && document.getElementById('sigModalBackdrop').classList.contains('show')) closeSigModal();
+  });
+
+  // Restore preview on load (in case Save Progress restored sigData hidden input)
+  function syncFromHidden() {
+    const v = document.getElementById('sigData').value;
+    if (v) renderSignaturePreview(v);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(syncFromHidden, 50); });
+  else setTimeout(syncFromHidden, 50);
+  // Re-sync after Save Progress restore (which fires ~400ms after DOMContentLoaded)
+  setTimeout(syncFromHidden, 700);
+})();
+</script>
+
+
+<!-- ── Workflow: Next Document link (uses ?wfq= queue + ?wfp= position + ?wfb= base URL) ── -->
+<div id="wfNextBanner" class="no-print" style="display:none; position:fixed; bottom:24px; right:24px; z-index:9998;">
+  <div style="background:#fff; border:1.5px solid #4a7a3c; border-radius:12px; padding:12px 16px; box-shadow:0 8px 24px rgba(0,0,0,0.18); display:flex; align-items:center; gap:12px; max-width:360px;">
+    <div style="font-size:.82rem; color:#444; line-height:1.4;">
+      <strong style="color:#4a7a3c;">Done with this form?</strong><br>
+      <span id="wfNextLabel" style="color:#666;">Move on to the next document.</span>
+    </div>
+    <a id="wfNextLink" href="#" target="_blank" rel="noopener" style="background:#4a7a3c; color:#fff; border:none; padding:10px 18px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; text-decoration:none; display:inline-block;">Next →</a>
+  </div>
+</div>
+<script>
+(function(){
+  // wfq = pipe-separated RELATIVE URLs (each URL-encoded once)
+  // wfb = launcher base URL (so we can resolve queue items via URL constructor)
+  // wfp = current zero-based position
+  var _params = new URLSearchParams(window.location.search);
+  var _wfq   = _params.get('wfq');
+  var _wfb   = _params.get('wfb');
+  var _wfp   = parseInt(_params.get('wfp') || '0', 10);
+  var _queue = [];
+  if (_wfq) {
+    try { _queue = _wfq.split('|').map(function(p){ return decodeURIComponent(p); }); }
+    catch(e) { _queue = []; }
+  }
+  var _hasNext = _queue.length > 0 && _wfp + 1 < _queue.length;
+
+  function _resolveUrl(relUrl) {
+    // Prefer URL constructor with the launcher's base for accurate resolution.
+    if (_wfb) {
+      try { return new URL(relUrl, _wfb).href; } catch(e) {}
+    }
+    // Fallback: resolve against current document
+    try { return new URL(relUrl, document.baseURI).href; } catch(e) {}
+    return relUrl;
+  }
+
+  function _buildNextHref() {
+    if (!_hasNext) return '#';
+    var nextAbs = _resolveUrl(_queue[_wfp + 1]);
+    var sep = nextAbs.indexOf('?') === -1 ? '?' : '&';
+    var url = nextAbs + sep + 'wfq=' + encodeURIComponent(_wfq) + '&wfp=' + (_wfp + 1);
+    if (_wfb) url += '&wfb=' + encodeURIComponent(_wfb);
+    return url;
+  }
+
+  function showBanner() {
+    if (!_hasNext) return;
+    var b = document.getElementById('wfNextBanner');
+    if (!b) return;
+    b.style.display = 'block';
+    var lbl = document.getElementById('wfNextLabel');
+    if (lbl) {
+      var totalLeft = _queue.length - _wfp - 1;
+      lbl.textContent = totalLeft === 1
+        ? 'Open the last document in your workflow.'
+        : 'Open the next document (' + totalLeft + ' more after this one).';
+    }
+    var link = document.getElementById('wfNextLink');
+    if (link) link.href = _buildNextHref();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showBanner);
+  else showBanner();
+
+  // Backwards-compatible function (some code may still call it)
+  window.goToNextDoc = function(){
+    if (!_hasNext) return;
+    var url = _buildNextHref();
+    var win = window.open(url, '_blank');
+    if (!win) window.location.href = url;
+  };
+})();
+</script>
+
+
+<!-- ── Save / Resume Progress ── -->
+<div id="wfSaveBtn" class="no-print" style="position:fixed; bottom:24px; left:24px; z-index:9997;">
+  <button onclick="openSaveModal()" style="background:#fff; color:#4a7a3c; border:1.5px solid #4a7a3c; padding:10px 16px; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.1);">💾 Save Progress</button>
+</div>
+
+<div id="wfSaveModal" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(20,30,20,0.55); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:10px; max-width:560px; width:100%; padding:22px 26px; box-shadow:0 18px 50px rgba(0,0,0,0.25);">
+    <h3 style="margin:0 0 6px 0; font-size:1.1rem; color:#4a7a3c;">💾 Save Your Progress</h3>
+    <p style="color:#666; font-size:.87rem; margin:0 0 12px 0;">Copy or email this link. Opening it later will restore everything you've entered on this form.</p>
+    <textarea id="wfSaveUrlBox" readonly style="width:100%; min-height:90px; border:1px solid #d6d6d0; padding:8px 10px; font-size:.78rem; font-family:monospace; word-break:break-all; background:#fafdf6; resize:vertical;"></textarea>
+    <div id="wfSaveSize" style="font-size:.75rem; color:#888; margin-top:4px;"></div>
+    <div style="display:flex; justify-content:space-between; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
+      <div style="display:flex; gap:6px;">
+        <button onclick="copySaveUrl()" style="background:#4a7a3c; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:.85rem; font-weight:600; cursor:pointer;">📋 Copy Link</button>
+        <a id="wfEmailLink" href="#" style="background:#fff; color:#4a7a3c; border:1px solid #4a7a3c; padding:7px 14px; border-radius:6px; font-size:.85rem; font-weight:600; cursor:pointer; text-decoration:none;">✉️ Email Link</a>
+      </div>
+      <button onclick="closeSaveModal()" style="background:transparent; color:#666; border:1px solid #ccc; padding:8px 14px; border-radius:6px; font-size:.85rem; cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ── Pick form inputs to serialize (exclude UI controls) ──
+  function _formInputs() {
+    return Array.from(document.querySelectorAll('input, select, textarea')).filter(function(el){
+      // Skip elements that live inside non-printable UI overlays / panels
+      if (el.closest('#wfNextBanner') || el.closest('#wfSaveBtn') || el.closest('#wfSaveModal')) return false;
+      if (el.closest('.print-modal-backdrop') || el.closest('.sig-modal-backdrop')) return false;
+      // Exclude buttons that have type="text" placeholder etc — only standard inputs
+      if (el.tagName === 'INPUT' && (el.type === 'button' || el.type === 'submit' || el.type === 'file')) return false;
+      // Skip the launcher print picker checkboxes (used in bundled index.html)
+      if (el.classList.contains('docpick')) return false;
+      // Skip workflow-sig canvas etc
+      return true;
+    });
+  }
+
+  function _collect() {
+    var arr = [];
+    _formInputs().forEach(function(el){
+      if (el.type === 'checkbox' || el.type === 'radio') arr.push(el.checked ? 1 : 0);
+      else arr.push(el.value || '');
+    });
+    return arr;
+  }
+
+  function _restore(arr) {
+    var inputs = _formInputs();
+    var n = Math.min(arr.length, inputs.length);
+    for (var i = 0; i < n; i++) {
+      var el = inputs[i];
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = (arr[i] === 1 || arr[i] === true);
+        try { el.dispatchEvent(new Event('change', {bubbles:true})); } catch(e){}
+      } else {
+        el.value = arr[i] == null ? '' : String(arr[i]);
+        try { el.dispatchEvent(new Event('input', {bubbles:true})); } catch(e){}
+        try { el.dispatchEvent(new Event('change', {bubbles:true})); } catch(e){}
+      }
+    }
+  }
+
+  // ── Unicode-safe base64 ──
+  function _b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+  function _b64decode(b64){ try { return decodeURIComponent(escape(atob(b64))); } catch(e){ return null; } }
+
+  // ── Save modal ──
+  window.openSaveModal = function(){
+    var arr = _collect();
+    var json = JSON.stringify(arr);
+    var b64 = _b64encode(json);
+    // Strip existing hash, keep search (so workflow params preserved)
+    var url = location.protocol + '//' + location.host + location.pathname + location.search + '#s=' + b64;
+    var box = document.getElementById('wfSaveUrlBox');
+    box.value = url;
+    var sz = document.getElementById('wfSaveSize');
+    sz.textContent = 'Link length: ' + url.length + ' chars · ' + arr.filter(function(x){return x !== '' && x !== 0;}).length + ' fields filled';
+    // Email link
+    var subject = encodeURIComponent('ODC Form Progress – ' + (document.title || 'Saved Form'));
+    var body = encodeURIComponent('Open this link in your browser to continue the saved form:\n\n' + url);
+    document.getElementById('wfEmailLink').href = 'mailto:?subject=' + subject + '&body=' + body;
+    document.getElementById('wfSaveModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(function(){ box.select(); }, 50);
+  };
+  window.closeSaveModal = function(){
+    document.getElementById('wfSaveModal').style.display = 'none';
+    document.body.style.overflow = '';
+  };
+  window.copySaveUrl = function(){
+    var box = document.getElementById('wfSaveUrlBox');
+    box.select();
+    try {
+      navigator.clipboard.writeText(box.value).then(function(){
+        var btn = event.target;
+        var orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(function(){ btn.textContent = orig; }, 1500);
+      });
+    } catch(e) {
+      document.execCommand('copy');
+      alert('Link copied to clipboard.');
+    }
+  };
+
+  // ── Restore on load ──
+  function tryRestore(){
+    var hash = location.hash;
+    if (!hash || hash.indexOf('#s=') !== 0) return;
+    var b64 = hash.slice(3);
+    var json = _b64decode(b64);
+    if (!json) return;
+    try {
+      var arr = JSON.parse(json);
+      // Defer until after the page-specific JS has rendered any dynamic rows
+      setTimeout(function(){ _restore(arr); }, 400);
+    } catch(e) { console.warn('Failed to restore form state:', e); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryRestore);
+  else tryRestore();
+
+  // Close modal on ESC
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && document.getElementById('wfSaveModal').style.display === 'flex') closeSaveModal();
+  });
+})();
+</script>
+
+
+<!-- ── Cross-form Participant Info auto-fill (reads from launcher's localStorage) ── -->
+<script>
+(function(){
+  var PREFIX = 'odc_shared_';
+  function fillField(el) {
+    var key = PREFIX + el.getAttribute('data-shared');
+    try {
+      var v = localStorage.getItem(key);
+      if (v === null) return;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = (v === '1');
+      } else {
+        el.value = v;
+      }
+      try { el.dispatchEvent(new Event('input', {bubbles:true})); } catch(e){}
+      try { el.dispatchEvent(new Event('change', {bubbles:true})); } catch(e){}
+    } catch(e){}
+  }
+  function bindSave(el) {
+    var key = PREFIX + el.getAttribute('data-shared');
+    var evt = (el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
+    el.addEventListener(evt, function(){
+      try {
+        if (el.type === 'checkbox' || el.type === 'radio') localStorage.setItem(key, el.checked ? '1' : '0');
+        else localStorage.setItem(key, el.value);
+      } catch(e){}
+    });
+  }
+  function processAll() {
+    document.querySelectorAll('[data-shared]').forEach(function(el){
+      fillField(el);
+      bindSave(el);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(processAll, 50); });
+  else setTimeout(processAll, 50);
+  // Re-run after page-specific JS finishes generating dynamic rows
+  setTimeout(processAll, 600);
+})();
+</script>
+
+
+<!-- ── Auto-print when ?print=1 in URL ── -->
+<script>
+(function(){
+  if (new URLSearchParams(window.location.search).get('print') === '1') {
+    function doPrint(){
+      try { window.focus(); } catch(e){}
+      setTimeout(function(){ window.print(); }, 500);
+    }
+    if (document.readyState === 'complete') doPrint();
+    else window.addEventListener('load', doPrint);
+  }
+})();
 </script>
 
 </body>
